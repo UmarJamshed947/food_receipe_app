@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-
 import 'package:flutter/material.dart';
 import 'package:food_recipe_app/model/model_view.dart';
+import 'package:food_recipe_app/screens/search_screen.dart';
 import 'package:http/http.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,23 +11,51 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<RecipeModel> recipeList =  <RecipeModel>[];
+  bool isLoading = true;
+
+  List<RecipeModel> recipeList = <RecipeModel>[];
   TextEditingController searchController = new TextEditingController();
+  List reciptCatList = [
+    {
+      "imgUrl": "https://images.unsplash.com/photo-1593560704563-f176a2eb61db",
+      "heading": "Chilli Food"
+    },
+    {
+      "imgUrl": "https://images.unsplash.com/photo-1593560704563-f176a2eb61db",
+      "heading": "Chilli Food"
+    },
+    {
+      "imgUrl": "https://images.unsplash.com/photo-1593560704563-f176a2eb61db",
+      "heading": "Chilli Food"
+    },
+    {
+      "imgUrl": "https://images.unsplash.com/photo-1593560704563-f176a2eb61db",
+      "heading": "Chilli Food"
+    }
+  ];
 
   //String url = "https://api.edamam.com/api/recipes/v2/b79327d05b8e5b838ad6cfd9576b30b6?type=public&app_id=18f22b87&app_key=c04871054a6de95042ebd724548bfa19&";
-  getRecipe(String query) async
-  {
-    String url = "https://api.edamam.com/api/recipes/v2?app_id=18f22b87&app_key=c04871054a6de95042ebd724548bfa19&type=public&q=$query";
+  getRecipe(String query) async {
+    String url =
+        "https://api.edamam.com/api/recipes/v2?app_id=18f22b87&app_key=c04871054a6de95042ebd724548bfa19&type=public&q=$query";
     Response response = await get(Uri.parse(url));
     Map data = jsonDecode(response.body);
-    data["hits"].forEach((element){
-      RecipeModel recipeModel = new RecipeModel();
-      recipeModel = RecipeModel.fromMap(element["recipe"]);
-      recipeList.add(recipeModel);
-      debugPrint(recipeList.toString());
+
+    setState(() {
+      data["hits"].forEach((element) {
+        RecipeModel recipeModel = new RecipeModel();
+        recipeModel = RecipeModel.fromMap(element["recipe"]);
+        recipeList.add(recipeModel);
+
+        setState(() {
+          isLoading = false;
+        });
+
+        debugPrint(recipeList.toString());
+      });
     });
 
-    recipeList.forEach((Recipe){
+    recipeList.forEach((Recipe) {
       print(Recipe.label);
       print(Recipe.calories);
     });
@@ -38,13 +66,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    getRecipe("ladoo");
+    getRecipe("chicken");
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         body: Stack(
-
       children: [
         Container(
           width: MediaQuery.of(context).size.width,
@@ -75,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         if ((searchController.text).replaceAll("", "") == "") {
                           print("Blank Search");
                         } else {
-                          getRecipe(searchController.text);
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen(searchController.text)));
                         }
                       },
                       child: Container(
@@ -101,20 +129,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("WHAT DO YOU WANT TO COOK TODAY?", style: TextStyle(fontSize: 33, color: Colors.white),),
-                    SizedBox(height: 10,),
-                    Text("Let's Cook Something New!", style: TextStyle(fontSize: 20,color: Colors.white),)
+                    Text(
+                      "WHAT DO YOU WANT TO COOK TODAY?",
+                      style: TextStyle(fontSize: 33, color: Colors.white),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      "Let's Cook Something New!",
+                      style: TextStyle(fontSize: 20, color: Colors.white),
+                    )
                   ],
                 ),
               ),
               Container(
-                child: ListView.builder(
-                  physics: NeverScrollableScrollPhysics(),
+                child: isLoading ? CircularProgressIndicator() :
+                    ListView.builder(
+                    physics: NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
                     itemCount: recipeList.length,
-                    itemBuilder:(context,index){
+                    itemBuilder: (context, index) {
                       return InkWell(
-                        onTap: (){},
+                        onTap: () {},
                         child: Card(
                           margin: EdgeInsets.all(20),
                           shape: RoundedRectangleBorder(
@@ -125,12 +162,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
-                                child: Image.network(recipeList[index].imageUrl,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: 200,),
+                                child: Image.network(
+                                  recipeList[index].imageUrl,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: 200,
+                                ),
                               ),
-
                               Positioned(
                                   left: 0,
                                   right: 0,
@@ -138,13 +176,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   child: Container(
                                       padding: EdgeInsets.symmetric(
                                           vertical: 5, horizontal: 10),
-                                      decoration: BoxDecoration(
-                                          color: Colors.black26),
+                                      decoration:
+                                          BoxDecoration(color: Colors.black26),
                                       child: Text(
                                         recipeList[index].label,
                                         style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20),
+                                            color: Colors.white, fontSize: 20),
                                       ))),
                               Positioned(
                                 right: 0,
@@ -155,15 +192,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                         color: Colors.white,
                                         borderRadius: BorderRadius.only(
                                             topRight: Radius.circular(10),
-                                            bottomLeft: Radius.circular(10)
-                                        )
-                                    ),
+                                            bottomLeft: Radius.circular(10))),
                                     child: Center(
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
-                                          Icon(Icons.local_fire_department, size: 15,),
-                                          Text(recipeList[index].calories.toString().substring(0, 6)),
+                                          Icon(
+                                            Icons.local_fire_department,
+                                            size: 15,
+                                          ),
+                                          Text(recipeList[index]
+                                              .calories
+                                              .toString()
+                                              .substring(0, 6)),
                                         ],
                                       ),
                                     )),
@@ -171,10 +213,62 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-
                       );
                     }),
               ),
+              Container(
+                height: 100,
+                child: ListView.builder(
+                    itemCount: reciptCatList.length,
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    itemBuilder: (context, index) {
+                      return Container(
+                          child: InkWell(
+                        onTap: () {},
+                        child: Card(
+                            margin: EdgeInsets.all(20),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            elevation: 0.0,
+                            child: Stack(
+                              children: [
+                                ClipRRect(
+                                    borderRadius: BorderRadius.circular(18.0),
+                                    child: Image.network(
+                                      reciptCatList[index]["imgUrl"],
+                                      fit: BoxFit.cover,
+                                      width: 200,
+                                      height: 250,
+                                    )),
+                                Positioned(
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    top: 0,
+                                    child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 5, horizontal: 10),
+                                        decoration: BoxDecoration(
+                                            color: Colors.black26),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              reciptCatList[index]["heading"],
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 28),
+                                            ),
+                                          ],
+                                        ))),
+                              ],
+                            )),
+                      ));
+                    }),
+              )
             ],
           ),
         ),
@@ -183,8 +277,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-
-Widget MyText()
-{
+Widget MyText() {
   return Text("MY TEXT WIDGET IS HERE");
 }
